@@ -9,17 +9,15 @@ Se crearon dos servidores (web1 y web2) que muestran mensajes diferentes, para p
 El balanceador distribuye las solicitudes utilizando el algoritmo round robin, que va alternando las peticiones entre los servidores.
 
 ---
-
 ## Infraestructura
 
-cliente → load balancer (nginx) → web1  
-                                → web2
+Cliente -> Load Balancer (Nginx) -> web1
+                                     -> web2
+
 
 ---
-
 ## Cómo ejecutar
 
-En la carpeta del proyecto:
-
-```bash
 docker compose up -d
+URL:
+http://localhost:8080
