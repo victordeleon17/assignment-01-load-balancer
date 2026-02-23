@@ -1,23 +1,16 @@
-# assignment01 - load balancer con nginx y docker
+# React + Vite
 
-## descripción
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-En esta tarea se utilizo un balanceador de carga usando nginx como proxy reverso y docker para poder levantar toda la infraestructura de una forma más sencilla.
+Currently, two official plugins are available:
 
-Se crearon dos servidores (web1 y web2) que muestran mensajes diferentes, para poder identificar cuál responde cada vez.
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-El balanceador distribuye las solicitudes utilizando el algoritmo round robin, que va alternando las peticiones entre los servidores.
+## React Compiler
 
----
-## Infraestructura
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-Cliente -> Load Balancer (Nginx) -> web1
-                                     -> web2
+## Expanding the ESLint configuration
 
-
----
-## Cómo ejecutar
-
-docker compose up -d
-URL:
-http://localhost:8080
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
