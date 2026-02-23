@@ -1,16 +1,17 @@
-# React + Vite
+En el presente proyecto se realizó el despliegue de una aplicación frontend desarrollada con Vite y Node.js hacia AWS Elastic Beanstalk, utilizando Docker como mecanismo de contenerización y GitHub Actions como herramienta de integración y despliegue continuo. El objetivo fue automatizar completamente el proceso de construcción y publicación de la aplicación en la nube.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+En primer lugar, se estructuró la aplicación y se creó un Dockerfile con un enfoque multi-stage. En la primera etapa, se utilizó una imagen oficial de Node.js para instalar las dependencias mediante npm y generar el build de producción. En la segunda etapa, se utilizó una imagen de Nginx para servir los archivos estáticos generados en el directorio /usr/share/nginx/html. Esta estrategia permitió separar la fase de construcción de la fase de ejecución, reduciendo el tamaño final de la imagen y mejorando la eficiencia del contenedor.
 
-Currently, two official plugins are available:
+Posteriormente, se configuró un pipeline de CI/CD mediante GitHub Actions. Cada vez que se realizaba un push a la rama designada, el workflow ejecutaba el proceso de empaquetado de la aplicación, generaba un archivo comprimido y utilizaba la acción beanstalk-deploy para publicar automáticamente la nueva versión en Elastic Beanstalk. Los registros del pipeline confirmaron que el archivo fue subido correctamente al bucket de S3 asociado al entorno, se creó una nueva versión de la aplicación y se inició el proceso de actualización del environment, el cual finalizó con estado “Ready” y salud “Green”.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Una vez desplegada la aplicación, se procedió a validar la conectividad desde el navegador. Sin embargo, la página no era accesible, mostrando errores de conexión. Ante esta situación, se realizó un análisis sistemático de la infraestructura en AWS. Se verificó que la instancia EC2 estuviera en estado “Running”, que tuviera dirección IP pública asignada y que el Security Group permitiera tráfico de entrada por el puerto 80 desde cualquier origen (0.0.0.0/0). Asimismo, se comprobó que las reglas de salida estuvieran habilitadas. Estas verificaciones confirmaron que no existía un bloqueo a nivel de red ni de firewall.
 
-## React Compiler
+El análisis técnico permitió identificar que el problema no estaba relacionado con el pipeline, con las credenciales de AWS ni con la configuración de red, sino con la configuración interna del contenedor. En una versión del Dockerfile se modificó la configuración de Nginx para que escuchara en el puerto 8080 en lugar del puerto 80. Sin embargo, el entorno de Elastic Beanstalk en modo Single Instance espera que la aplicación responda en el puerto 80 para tráfico HTTP estándar. Como resultado, aunque la infraestructura estaba correctamente desplegada y el entorno mostraba estado saludable, el servicio dentro del contenedor no estaba escuchando en el puerto expuesto hacia internet. Esto provocaba que las solicitudes del navegador no recibieran respuesta, generando el error de conexión.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+En conclusión, el despliegue automático y la infraestructura en AWS fueron configurados correctamente, pero la aplicación no era accesible debido a una desalineación entre el puerto en el que el contenedor estaba escuchando y el puerto que Elastic Beanstalk expone para tráfico HTTP. Este incidente evidenció la importancia de mantener coherencia entre la configuración interna del contenedor y la configuración de red del entorno de despliegue.
 
-## Expanding the ESLint configuration
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+<img width="1406" height="774" alt="Screenshot from 2026-02-23 00-15-00" src="https://github.com/user-attachments/assets/36bc2803-ef08-45d5-ab9e-c26b3064f223" />
+
+
+<img width="1726" height="934" alt="image" src="https://github.com/user-attachments/assets/03e50942-d201-48c3-9148-df126e3fc694" />
