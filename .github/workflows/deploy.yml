@@ -14,10 +14,6 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: APP
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -27,33 +23,58 @@ jobs:
         with:
           node-version: 20
 
-      - name: Debug workspace
+      # 1) DEBUG: muestra estructura y detecta dónde está el package.json
+      - name: Show repo root files and detect app dir
         run: |
-          echo "PWD:"
+          echo "PWD (repo root):"
           pwd
-          echo "FILES:"
+          echo "ROOT FILES:"
           ls -la
-          echo "package.json?"
-          test -f package.json && echo "OK" || echo "MISSING"
-          echo "package-lock.json?"
-          test -f package-lock.json && echo "OK" || echo "MISSING"
 
+          echo "---- find package.json ----"
+          find . -maxdepth 4 -name package.json -print
+
+          echo "---- find package-lock.json ----"
+          find . -maxdepth 4 -name package-lock.json -print
+
+          APP_DIR="$(dirname "$(find . -maxdepth 4 -name package.json -print -quit)")"
+          if [ -z "$APP_DIR" ]; then
+            echo "ERROR: package.json not found"
+            exit 1
+          fi
+
+          echo "Detected APP_DIR: $APP_DIR"
+          echo "APP_DIR=$APP_DIR" >> $GITHUB_ENV
+
+      # 2) Instala dependencias en la carpeta detectada
       - name: Install dependencies
-        run: npm ci
+        run: |
+          cd "$APP_DIR"
+          npm ci
 
       - name: Run Lint
-        run: npm run lint
+        run: |
+          cd "$APP_DIR"
+          npm run lint
 
       - name: Build project
-        run: npm run build
+        run: |
+          cd "$APP_DIR"
+          npm run build
 
+      # 3) Build Docker (desde la carpeta donde está el Dockerfile del proyecto)
       - name: Build Docker image
-        run: docker build -t assignment-app:${{ github.sha }} .
+        run: |
+          cd "$APP_DIR"
+          docker build -t assignment-app:${{ github.sha }} .
 
+      # 4) Crear deploy.zip en la RAÍZ del repo (fuera de APP_DIR)
       - name: Create deployment package
         run: |
-          zip -r ../deploy.zip . -x "node_modules/*" "dist/*"
+          cd "$APP_DIR"
+          zip -r "$GITHUB_WORKSPACE/deploy.zip" . -x "node_modules/*" "dist/*" ".git/*"
 
+      # 5) AWS creds
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -61,6 +82,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
+      # 6) Deploy a Elastic Beanstalk
       - name: Deploy to Elastic Beanstalk
         uses: einaregilsson/beanstalk-deploy@v22
         with:
