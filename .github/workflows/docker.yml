@@ -4,14 +4,14 @@ on:
   push:
     branches:
       - assignment-04
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  docker:
+  build-and-push:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -20,17 +20,16 @@ jobs:
         uses: dopplerhq/cli-action@v3
 
       - name: Export Docker Hub creds from Doppler
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
         run: |
           echo "DOCKERHUB_USERNAME=$(doppler secrets get DOCKERHUB_USERNAME --plain)" >> $GITHUB_ENV
           echo "DOCKERHUB_TOKEN=$(doppler secrets get DOCKERHUB_TOKEN --plain)" >> $GITHUB_ENV
-        env:
-          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
 
-      - name: Debug (masked)
+      - name: Fail if creds missing
         run: |
-          if [ -z "${DOCKERHUB_USERNAME}" ]; then echo "DOCKERHUB_USERNAME is empty"; exit 1; fi
-          if [ -z "${DOCKERHUB_TOKEN}" ]; then echo "DOCKERHUB_TOKEN is empty"; exit 1; fi
-          echo "DockerHub creds loaded"
+          if [ -z "${DOCKERHUB_USERNAME}" ]; then echo "DOCKERHUB_USERNAME missing"; exit 1; fi
+          if [ -z "${DOCKERHUB_TOKEN}" ]; then echo "DOCKERHUB_TOKEN missing"; exit 1; fi
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
