@@ -1,0 +1,46 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - assignment-04
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Doppler CLI
+        uses: dopplerhq/cli-action@v3
+
+      - name: Load secrets from Doppler
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+        run: |
+          doppler secrets download --no-file --format env > .env.ci
+          set -a
+          source .env.ci
+          set +a
+
+      - name: Log in to Docker Hub
+        run: |
+          echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+
+      - name: Build Docker image
+        run: |
+          IMAGE="$DOCKERHUB_USERNAME/assignment-04"
+          SHA="${GITHUB_SHA}"
+          docker build -t "$IMAGE:latest" -t "$IMAGE:$SHA" .
+
+      - name: Push Docker image
+        run: |
+          IMAGE="$DOCKERHUB_USERNAME/assignment-04"
+          SHA="${GITHUB_SHA}"
+          docker push "$IMAGE:latest"
+          docker push "$IMAGE:$SHA"
