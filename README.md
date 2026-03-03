@@ -14,6 +14,10 @@ El balanceador distribuye las solicitudes utilizando el algoritmo round robin, q
 Cliente -> Load Balancer (Nginx) -> web1
                                      -> web2
 
+<img width="1917" height="864" alt="app" src="https://github.com/user-attachments/assets/5bab709b-2c5a-4a97-bf5d-42d2069fb72c" />
+<img width="1919" height="923" alt="dockerhub-tags" src="https://github.com/user-attachments/assets/a92aa72a-e263-4569-9bc5-6d2f3024bd3b" />
+   
+
 
 ---
 ## Cómo ejecutar
