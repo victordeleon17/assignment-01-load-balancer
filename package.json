@@ -1,0 +1,9 @@
+{
+  "name": "assignment-05",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev:web": "pnpm --filter web dev",
+    "dev:api": "pnpm --filter api dev"
+  }
+}
