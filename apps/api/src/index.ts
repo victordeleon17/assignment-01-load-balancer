@@ -8,7 +8,7 @@ import swaggerJsdoc from "swagger-jsdoc"
 const app = express()
 const prisma = new PrismaClient()
 
-const PORT = 4000
+const PORT = process.env.PORT || 4000
 
 app.use(cors())
 app.use(express.json())
@@ -25,7 +25,9 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: "http://localhost:4000"
+        url: process.env.RAILWAY_PUBLIC_DOMAIN
+          ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+          : `http://localhost:${PORT}`
       }
     ]
   },
@@ -39,31 +41,13 @@ app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 // ---------------- END SWAGGER ----------------
 
 
-/**
- * @swagger
- * /
- *   get:
- *     summary: Health check
- *     responses:
- *       200:
- *         description: API funcionando
- */
-
 // health check
 app.get("/", (req, res) => {
   res.json({ message: "API running" })
 })
 
 
-/**
- * @swagger
- * /tasks:
- *   get:
- *     summary: Obtener todas las tareas
- *     responses:
- *       200:
- *         description: Lista de tareas
- */
+// ---------------- TASK ROUTES ----------------
 
 // obtener tareas
 app.get("/tasks", async (req, res) => {
@@ -78,29 +62,11 @@ app.get("/tasks", async (req, res) => {
     res.json(tasks)
 
   } catch (error) {
+    console.error(error)
     res.status(500).json({ error: "Error fetching tasks" })
   }
 })
 
-
-/**
- * @swagger
- * /tasks:
- *   post:
- *     summary: Crear una tarea
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               title:
- *                 type: string
- *     responses:
- *       200:
- *         description: Tarea creada
- */
 
 // crear tarea
 app.post("/tasks", async (req, res) => {
@@ -122,27 +88,12 @@ app.post("/tasks", async (req, res) => {
     res.json(task)
 
   } catch (error) {
+    console.error(error)
     res.status(500).json({ error: "Error creating task" })
   }
 
 })
 
-
-/**
- * @swagger
- * /tasks/{id}:
- *   delete:
- *     summary: Eliminar una tarea
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Tarea eliminada
- */
 
 // eliminar tarea
 app.delete("/tasks/:id", async (req, res) => {
@@ -168,12 +119,15 @@ app.delete("/tasks/:id", async (req, res) => {
     })
 
   } catch (error) {
+    console.error(error)
     res.status(500).json({ error: "Error deleting task" })
   }
 
 })
 
 
-app.listen(PORT, () => {
-  console.log(`API running on http://localhost:${PORT}`)
+// ---------------- SERVER ----------------
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`API running on port ${PORT}`)
 })
