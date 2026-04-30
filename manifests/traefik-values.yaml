@@ -1,0 +1,12 @@
+ports:
+  web:
+    exposedPort: 80
+    port: 8000
+    protocol: TCP
+
+service:
+  type: NodePort
+
+providers:
+  kubernetesCRD:
+    enabled: true
